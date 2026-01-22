@@ -20,9 +20,21 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Syntax check notebooks
+      - name: Install nbconvert
         run: |
-          for file in real_time/*.py; do
+          pip install nbconvert
+
+      - name: Convert notebooks to Python
+        run: |
+          mkdir -p converted
+          for nb in real_time/*.ipynb; do
+            echo "Converting $nb"
+            jupyter nbconvert --to script "$nb" --output-dir converted
+          done
+
+      - name: Syntax check converted notebooks
+        run: |
+          for file in converted/*.py; do
             echo "Checking $file"
             python -m py_compile "$file"
           done
