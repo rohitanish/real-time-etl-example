@@ -1,13 +1,14 @@
-name: Deploy to Databricks
+name: Notebook Syntax Check
 
 on:
   push:
     branches:
-      - main   # Trigger workflow when code is pushed to main branch
+      - main   # Run on pushes to main
+  pull_request: # Also run on PRs
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  deploy-job:
+  syntax-check:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,26 +16,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Python (for tests or packaging)
+      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # Step 3: Install dependencies
-      - name: Install pytest
-        run: pip install pytest
-
-      # Step 4: Run unit tests (optional but recommended)
-      - name: Run tests
+      # Step 3: Install nbconvert (only if notebooks are .ipynb)
+      - name: Install dependencies
         run: |
-          pytest tests/
+          pip install nbconvert
 
-      # Step 5: Deploy to Databricks
-      - name: Deploy job to Databricks
-        uses: databricks/run-notebook@v0
-        with:
-          databricks-host: ${{ secrets.DATABRICKS_HOST }}
-          databricks-token: ${{ secrets.DATABRICKS_TOKEN }}
-          notebook-path: /Repos/your-org/your-repo/path/to/notebook.py
-          job-name: "PySpark Pipeline Job"
+      # Step 4: Convert notebooks to .py (skip if you already have .py files in repo)
+      - name: Convert notebooks to Python
+        run: |
+          for nb in notebooks/*.ipynb; do
+            jupyter nbconvert --to script "$nb"
+          done
+
+      # Step 5: Syntax check all Python files
+      - name: Syntax check notebooks
+        run: |
+          for file in notebooks/*.py; do
+            echo "Checking $file"
+            python -m py_compile "$file"
+          done
