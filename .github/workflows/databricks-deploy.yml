@@ -22,7 +22,7 @@ jobs:
 
       - name: Syntax check notebooks
         run: |
-          for file in notebooks/*.py; do
+          for file in Real Time/*.py; do
             echo "Checking $file"
             python -m py_compile "$file"
           done
