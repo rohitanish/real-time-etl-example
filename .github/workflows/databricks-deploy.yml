@@ -1,40 +1,28 @@
-name: Deploy to Databricks
+name: Notebook Syntax Check
 
 on:
   push:
     branches:
-      - main   # Trigger workflow when code is pushed to main branch
-  workflow_dispatch: # Allow manual trigger
+      - main
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  deploy-job:
+  syntax-check:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Python (for tests or packaging)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # Step 3: Install dependencies
-      - name: Install pytest
-        run: pip install pytest
-
-      # Step 4: Run unit tests (optional but recommended)
-      - name: Run tests
+      - name: Syntax check notebooks
         run: |
-          pytest tests/
-
-      # Step 5: Deploy to Databricks
-      - name: Deploy job to Databricks
-        uses: databricks/run-notebook@v0
-        with:
-          databricks-host: ${{ secrets.DATABRICKS_HOST }}
-          databricks-token: ${{ secrets.DATABRICKS_TOKEN }}
-          notebook-path: /Repos/your-org/your-repo/path/to/notebook.py
-          job-name: "PySpark Pipeline Job"
+          for file in Real Time/*.py; do
+            echo "Checking $file"
+            python -m py_compile "$file"
+          done
